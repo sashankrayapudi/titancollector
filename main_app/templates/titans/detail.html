@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h1>Titan Details</h1>
+
+<div class="row">
+  <div class="col s6">
+    <div class="card">
+      <div class="card-content">
+        <span class="card-title">{{ titan.name }}</span>
+        <p>Power: {{ titan.power }}</p>
+        <p>Description: {{ titan.description|linebreaks }}</p>
+      </div>
+      <div class="card-action">
+        <a href="{% url 'titans_update' titan.id %}">Edit</a>
+        <a href="{% url 'titans_delete' titan.id %}">Delete</a>
+      </div>
+    </div>
+  </div>
+  <div class="col s6">
+    <form action="{% url 'add_feeding' titan.id %}" method="POST">
+      {% csrf_token %}
+      {{ feeding_form.as_p }}
+      <input type="submit" class="btn" value="Add Feeding">
+    </form>
+    {% if titan.meals_left <= 0 %}
+      <div class="card-panel teal-text center-align">{{titan.name}} has been fed all meals for today</div>
+    {% else %}
+      <div class="card-panel red-text center-align">{{titan.name}} needs {{ titan.meals_left }} meals today</div>
+    {% endif %}
+    <table class="striped">
+      <thead>
+        <tr><th>Date</th><th>Meal</th></tr>
+      </thead>
+      <tbody>
+        {% for feeding in titan.feeding_set.all %}
+          <tr>
+            <td>{{feeding.date}}</td>
+            <td>{{feeding.get_meal_display}}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<hr>
+
+<div class="row">
+  <div class="col s6">
+    <h3>{{ titan.name }}'s Eldians</h3>
+    {% if titan.eldians.count %}
+    {% for eldian in titan.eldians.all %}
+    <div class="card">
+      <div class="card-content">
+        <span class="card-title">
+          <span style="color: tan">{{ eldian.name }}</span>
+        </span>
+      </div>
+      <div class="card-action">
+        <form action="{% url 'unassoc_eldian' titan.id eldian.id %}" method="POST">
+          {% csrf_token %}
+          <button type="submit" class="btn">Remove</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <h5>No Eldians :(</h5>
+    {% endif %}
+</div>
+<div class="col s6">
+  <h3>Available Eldians</h3>
+  {% if eldians.count %}
+    {% for eldian in eldians.all %}
+      <div class="card">
+        <div class="card-content">
+          <span class="card-title">
+            <span style="color: tan">{{ eldian.name }}</span> 
+          </span>
+        </div>
+        <div class="card-action">
+          <form action="{% url 'assoc_eldian' titan.id eldian.id %}" method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn">Add</button>
+          </form>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <h5> {{titan.name}} Already Has All Eldians Available</h5>
+  {% endif %}
+</div>
+<script>
+  const dateEl = document.getElementById('id_date');
+  M.Datepicker.init(dateEl, {
+    format: 'yyyy-mm-dd',
+    defaultDate: new Date(),
+    setDefaultDate: true,
+    autoClose: true
+  });
+
+  const selectEl = document.getElementById('id_meal');
+  M.FormSelect.init(selectEl);
+</script>
+
+
+
+{% endblock %}
